@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>StudyLumina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,700;1,9..144,900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:390px;height:693px;overflow:hidden;background:#060C18}
+#stage{
+  position:relative;width:390px;height:693px;
+  overflow:hidden;font-family:'DM Sans',sans-serif;
+  background:#060C18;
+}
+
+/* ── canvas layers ── */
+#bg-canvas{position:absolute;inset:0;z-index:0}
+#fg-canvas{position:absolute;inset:0;z-index:5;pointer-events:none}
+
+/* ── global vignette ── */
+#vig{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,
+    transparent 30%, rgba(6,12,24,0.75) 80%, rgba(6,12,24,0.96) 100%);
+}
+
+/* ── acts ── */
+.act{
+  position:absolute;inset:0;z-index:6;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  will-change:opacity;
+}
+
+/* ── progress ── */
+#pbar{
+  position:absolute;top:0;left:0;height:2px;z-index:20;
+  background:linear-gradient(90deg,#1A3D6B,#D4AF37);
+  border-radius:0 2px 2px 0;
+  box-shadow:0 0 10px rgba(212,175,55,0.6);
+  width:0%;
+}
+
+/* ── logo (bottom) ── */
+#logo{
+  position:absolute;bottom:0;left:0;right:0;
+  height:62px;z-index:15;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(to top,rgba(6,12,24,1) 0%,transparent 100%);
+  opacity:0;transition:opacity 0.6s ease;
+}
+.lsv{width:26px;height:26px;flex-shrink:0}
+.lrt{display:flex;flex-direction:column;gap:1px}
+.lnm{
+  font-family:'Fraunces',serif;font-size:17px;font-weight:700;
+  color:#E8DFC8;line-height:1;
+}
+.lnm b{color:#D4AF37}
+.lurl{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:rgba(212,175,55,0.5);letter-spacing:0.12em;
+}
+
+/* ═══════════════════════════════
+   ACT 1 — DARK ROOM → LUMIÈRE
+   Concept : une salle sombre,
+   un faisceau de lumière qui
+   éclaire la seule chose qui compte
+═══════════════════════════════ */
+#act1{justify-content:flex-start;padding-top:0}
+
+.a1-scene{
+  width:390px;height:693px;
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;
+}
+
+/* Le "plafond" d'où vient la lumière */
+.spotlight-source{
+  position:absolute;top:0;left:50%;
+  transform:translateX(-50%);
+  width:4px;height:4px;
+  border-radius:50%;
+  background:#D4AF37;
+  box-shadow:0 0 12px 4px rgba(212,175,55,0.8),
+             0 0 30px 10px rgba(212,175,55,0.3);
+  opacity:0;
+  transition:opacity 0.4s ease;
+  z-index:3;
+}
+
+/* Cone de lumière SVG */
+#spotlight-cone{
+  position:absolute;top:0;left:50%;
+  transform:translateX(-50%);
+  width:280px;height:340px;
+  opacity:0;
+  transition:opacity 1.2s ease;
+  z-index:2;
+}
+
+/* Zone éclairée — texte central */
+.a1-lit{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-54%);
+  width:340px;
+  display:flex;flex-direction:column;
+  align-items:center;
+  z-index:4;
+}
+
+.a1-q{
+  font-family:'DM Mono',monospace;font-size:11px;
+  letter-spacing:0.2em;color:rgba(212,175,55,0.7);
+  text-transform:uppercase;text-align:center;
+  margin-bottom:16px;
+  opacity:0;transform:translateY(8px);
+  transition:opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+
+.a1-big{
+  font-family:'Fraunces',serif;font-weight:900;font-size:68px;
+  line-height:0.9;letter-spacing:-0.03em;
+  color:#E8DFC8;text-align:center;
+  opacity:0;transform:translateY(30px) scale(0.96);
+  transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+             transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform,opacity;
+}
+.a1-big em{
+  font-style:italic;
+  color:transparent;
+  -webkit-text-stroke:1.5px #D4AF37;
+  display:block;
+  line-height:0.95;
+}
+
+.a1-line{
+  width:1px;height:0px;
+  background:linear-gradient(to bottom,#D4AF37,transparent);
+  margin:20px auto;
+  transition:height 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+.a1-answer{
+  font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;
+  color:#E8DFC8;text-align:center;line-height:1.4;
+  opacity:0;transform:translateY(14px);
+  transition:opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.a1-answer em{
+  font-style:normal;color:#D4AF37;
+  position:relative;
+}
+
+/* ERS badge — apparaît en dernier dans l'acte 1 */
+.a1-ers{
+  margin-top:20px;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 22px 10px 14px;
+  background:rgba(26,61,107,0.2);
+  border:1px solid rgba(212,175,55,0.25);
+  border-radius:50px;
+  opacity:0;transform:translateY(12px) scale(0.95);
+  transition:opacity 0.55s ease, transform 0.55s cubic-bezier(0.16,1,0.3,1);
+}
+.ers-live-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#D4AF37;flex-shrink:0;
+  animation:ldot 1.8s ease-in-out infinite;
+}
+@keyframes ldot{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(212,175,55,0.6)}
+  50%{opacity:0.5;box-shadow:0 0 0 5px rgba(212,175,55,0)}
+}
+.ers-live-txt{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:#D4AF37;letter-spacing:0.14em;text-transform:uppercase;
+}
+
+/* ═══════════════════════════════
+   ACT 2 — SPLIT SCREEN
+   Concept : avant/après côte à côte
+   Gauche = chaos sans app
+   Droite = clarté avec StudyLumina
+═══════════════════════════════ */
+#act2{padding:0;align-items:stretch}
+
+.a2-wrap{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  padding:0 24px;
+  justify-content:center;
+}
+
+.a2-tag{
+  font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.22em;color:rgba(212,175,55,0.6);
+  text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+  opacity:0;transition:opacity 0.45s ease;
+}
+.a2-tag::before{content:'';width:20px;height:1px;background:rgba(212,175,55,0.3)}
+
+/* Split comparison */
+.split{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:16px;
+}
+.split-col{
+  border-radius:14px;padding:14px 12px;
+  opacity:0;
+  will-change:transform,opacity;
+}
+.split-bad{
+  background:rgba(180,40,40,0.07);
+  border:1px solid rgba(180,40,40,0.2);
+  transform:translateX(-20px);
+  transition:opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+             transform 0.55s cubic-bezier(0.16,1,0.3,1);
+}
+.split-good{
+  background:rgba(26,61,107,0.18);
+  border:1px solid rgba(212,175,55,0.22);
+  transform:translateX(20px);
+  transition:opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+             transform 0.55s cubic-bezier(0.16,1,0.3,1);
+}
+.split-header{
+  font-size:9px;font-family:'DM Mono',monospace;
+  letter-spacing:0.16em;text-transform:uppercase;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:5px;
+}
+.split-bad .split-header{color:rgba(255,120,120,0.7)}
+.split-good .split-header{color:#D4AF37}
+.split-header-dot{width:5px;height:5px;border-radius:50%}
+.split-bad .split-header-dot{background:rgba(255,120,120,0.7)}
+.split-good .split-header-dot{background:#D4AF37}
+
+.split-item{
+  font-size:12px;color:#8CA3BC;
+  line-height:1.5;margin-bottom:7px;
+  display:flex;align-items:flex-start;gap:6px;
+}
+.split-item:last-child{margin-bottom:0}
+.si-icon{flex-shrink:0;font-size:11px;margin-top:1px}
+.split-bad .split-item{color:rgba(200,150,150,0.75)}
+.split-good .split-item{color:#C8D8E8}
+
+/* Timeline reveal — "comment ça marche en 3 étapes" */
+.steps-title{
+  font-family:'Fraunces',serif;font-size:22px;font-weight:700;
+  color:#E8DFC8;margin-bottom:14px;
+  opacity:0;transform:translateY(10px);
+  transition:opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+.steps-title em{font-style:italic;color:#D4AF37}
+
+.steps{display:flex;flex-direction:column;gap:0}
+.step{
+  display:flex;align-items:flex-start;gap:12px;
+  opacity:0;transform:translateX(-16px);
+  will-change:transform,opacity;
+  transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1),
+             transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  padding-bottom:12px;
+  position:relative;
+}
+.step:last-child{padding-bottom:0}
+/* Vertical connector line */
+.step:not(:last-child)::before{
+  content:'';
+  position:absolute;left:13px;top:26px;
+  width:1px;height:calc(100% - 16px);
+  background:linear-gradient(to bottom,rgba(26,61,107,0.6),rgba(26,61,107,0.1));
+}
+.step-num{
+  width:27px;height:27px;border-radius:50%;
+  background:rgba(26,61,107,0.5);
+  border:1px solid rgba(212,175,55,0.3);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:#D4AF37;font-weight:500;
+}
+.step-body{flex:1;padding-top:4px}
+.step-name{font-size:13px;font-weight:700;color:#D4E0EE;margin-bottom:2px}
+.step-desc{font-size:11px;color:#8CA3BC;line-height:1.45}
+
+/* ═══════════════════════════════
+   ACT 3 — THE SCORE
+   Concept : gros ERS ring au centre
+   qui se "charge", entouré de tags
+   qui apparaissent en orbite
+═══════════════════════════════ */
+#act3{padding:0 28px}
+
+.a3-wrap{
+  width:100%;
+  display:flex;flex-direction:column;align-items:center;
+}
+
+.a3-tag{
+  font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.22em;color:rgba(212,175,55,0.6);
+  text-transform:uppercase;margin-bottom:20px;
+  opacity:0;transition:opacity 0.45s ease;
+  align-self:flex-start;
+  display:flex;align-items:center;gap:8px;
+}
+.a3-tag::after{content:'';width:20px;height:1px;background:rgba(212,175,55,0.3)}
+
+/* Big ring */
+.big-ring-wrap{
+  position:relative;
+  width:180px;height:180px;
+  margin-bottom:20px;
+  opacity:0;transform:scale(0.7);
+  transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+             transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform,opacity;
+}
+.big-ring-wrap svg{width:100%;height:100%}
+#bigRingBg{stroke:rgba(26,61,107,0.3);stroke-width:8;fill:none}
+#bigRingFill{
+  stroke:url(#ringGrad);stroke-width:8;fill:none;
+  stroke-linecap:round;
+  stroke-dasharray:502;stroke-dashoffset:502;
+  transition:stroke-dashoffset 2s cubic-bezier(0.4,0,0.2,1);
+  filter:drop-shadow(0 0 8px rgba(212,175,55,0.5));
+}
+.ring-center{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-label{
+  font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.14em;color:rgba(212,175,55,0.6);
+  text-transform:uppercase;margin-bottom:4px;
+}
+.ring-main{
+  font-family:'Fraunces',serif;font-size:28px;font-weight:700;
+  color:#E8DFC8;line-height:1;text-align:center;
+}
+.ring-main em{font-style:italic;color:#D4AF37}
+.ring-sub{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:rgba(212,175,55,0.5);margin-top:4px;
+  letter-spacing:0.1em;
+}
+
+/* Orbit tags — apparaissent autour du ring */
+.orbit-tags{
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;
+  width:320px;
+}
+.otag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 13px;
+  border-radius:30px;
+  font-size:11px;font-weight:600;color:#C8D8E8;
+  opacity:0;transform:translateY(14px) scale(0.9);
+  will-change:transform,opacity;
+  transition:opacity 0.45s cubic-bezier(0.16,1,0.3,1),
+             transform 0.45s cubic-bezier(0.16,1,0.3,1);
+  animation:otflt 3.5s ease-in-out infinite;
+  animation-play-state:paused;
+}
+@keyframes otflt{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.otag-a{background:rgba(26,61,107,0.35);border:1px solid rgba(26,61,107,0.5);animation-delay:0s}
+.otag-b{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);animation-delay:0.6s}
+.otag-c{background:rgba(26,61,107,0.35);border:1px solid rgba(26,61,107,0.5);animation-delay:1.1s}
+.otag-d{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);animation-delay:0.3s}
+.otag-e{background:rgba(26,61,107,0.35);border:1px solid rgba(26,61,107,0.5);animation-delay:0.9s}
+.otag em{font-style:normal;color:#D4AF37;font-size:13px}
+
+/* ═══════════════════════════════
+   ACT 4 — CTA CINÉMATIQUE
+   Concept : fond qui "respire",
+   texte massif, bouton editorial
+═══════════════════════════════ */
+#act4{padding:0 28px}
+
+.a4-wrap{
+  width:100%;
+  display:flex;flex-direction:column;align-items:center;
+}
+
+/* Grosse phrase éditoriale */
+.a4-pre{
+  font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.22em;color:rgba(212,175,55,0.55);
+  text-transform:uppercase;margin-bottom:14px;
+  text-align:center;
+  opacity:0;transition:opacity 0.4s ease;
+}
+
+.a4-title{
+  font-family:'Fraunces',serif;font-weight:900;
+  font-size:58px;line-height:0.92;
+  letter-spacing:-0.03em;
+  color:#E8DFC8;text-align:center;
+  opacity:0;transform:translateY(28px);
+  transition:opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+             transform 0.75s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform,opacity;
+  margin-bottom:8px;
+}
+.a4-title em{
+  font-style:italic;color:#D4AF37;display:block;
+}
+
+.a4-rule{
+  width:48px;height:1px;
+  background:linear-gradient(90deg,transparent,#D4AF37,transparent);
+  margin:16px auto;
+  opacity:0;transform:scaleX(0);transform-origin:center;
+  transition:opacity 0.4s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+
+.a4-sub{
+  font-size:15px;color:#8CA3BC;text-align:center;
+  line-height:1.6;
+  opacity:0;transition:opacity 0.5s ease;
+  margin-bottom:24px;
+}
+.a4-sub strong{color:#D4E0EE}
+
+/* Bouton editorial — large, typographique */
+.a4-btn{
+  width:100%;
+  background:linear-gradient(135deg,#1A3D6B 0%,#0E2240 100%);
+  border:1px solid rgba(212,175,55,0.3);
+  border-radius:18px;padding:22px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  opacity:0;transform:translateY(14px);
+  will-change:transform,opacity;
+  transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),
+             transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  animation:btnpulse 2.6s ease-in-out infinite;
+  animation-play-state:paused;
+  position:relative;overflow:hidden;
+}
+.a4-btn::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent);
+}
+.a4-btn::after{
+  content:'';position:absolute;
+  bottom:-40px;right:-40px;
+  width:120px;height:120px;
+  border-radius:50%;
+  background:rgba(212,175,55,0.04);
+  border:1px solid rgba(212,175,55,0.08);
+}
+@keyframes btnpulse{
+  0%,100%{box-shadow:0 0 0 rgba(212,175,55,0)}
+  50%{box-shadow:0 0 24px rgba(212,175,55,0.1),0 0 0 1px rgba(212,175,55,0.08)}
+}
+.btn-l{display:flex;flex-direction:column;gap:5px}
+.btn-cta{font-size:17px;font-weight:700;color:#E8DFC8;letter-spacing:0.01em}
+.btn-url{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:rgba(212,175,55,0.6);letter-spacing:0.08em;
+}
+.btn-r{
+  width:42px;height:42px;border-radius:12px;flex-shrink:0;
+  background:rgba(212,175,55,0.1);
+  border:1px solid rgba(212,175,55,0.2);
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-r svg{width:18px;height:18px}
+
+.a4-urg{
+  font-size:11px;color:#8CA3BC;margin-top:12px;
+  text-align:center;
+  opacity:0;
+  animation:urgblink 2.2s ease-in-out infinite;
+  animation-play-state:paused;
+}
+@keyframes urgblink{0%,100%{opacity:0.45}50%{opacity:1}}
+.a4-urg span{color:#D4AF37}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- BG canvas (grain + gradient fields) -->
+  <canvas id="bg-canvas"></canvas>
+  <!-- FG canvas (particles + lines) -->
+  <canvas id="fg-canvas"></canvas>
+
+  <div id="vig"></div>
+  <div id="pbar"></div>
+
+  <!-- LOGO -->
+  <div id="logo">
+    <svg class="lsv" viewBox="0 0 512 512" fill="none">
+      <defs>
+        <linearGradient id="gM" x1="0.10" y1="0.05" x2="0.88" y2="0.95">
+          <stop offset="0%" stop-color="#FFF1BC"/>
+          <stop offset="22%" stop-color="#F3D68B"/>
+          <stop offset="48%" stop-color="#D4AF37"/>
+          <stop offset="72%" stop-color="#AE7D24"/>
+          <stop offset="100%" stop-color="#F0CF75"/>
+        </linearGradient>
+        <linearGradient id="gF" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF3C4"/>
+          <stop offset="34%" stop-color="#E4BD5D"/>
+          <stop offset="68%" stop-color="#9D6E19"/>
+          <stop offset="100%" stop-color="#D9A936"/>
+        </linearGradient>
+      </defs>
+      <path d="M382 90H172C113 90 78 121 78 168C78 202 95 229 129 252L214 310C231 321 238 333 238 347C238 368 222 379 194 379H83L45 426H198C267 426 305 394 305 343C305 307 286 280 251 257L165 199C150 189 143 179 143 166C143 148 157 139 181 139H347Z" fill="url(#gM)"/>
+      <path d="M45 426H198C222 426 243 421 260 412H89Z" fill="url(#gF)" opacity="0.90"/>
+      <path d="M172 91H382L348 139H181C157 139 143 148 143 166" fill="none" stroke="#FFF5D2" stroke-width="4" stroke-opacity="0.40"/>
+      <g transform="translate(54 0)">
+        <path d="M292 170L347 219V354C347 372 354 379 373 379H455L416 426H364C315 426 292 402 292 357Z" fill="url(#gM)"/>
+        <path d="M292 357V214L313 231V356C313 389 328 407 360 421C318 417 292 396 292 357Z" fill="url(#gF)" opacity="0.74"/>
+      </g>
+    </svg>
+    <div class="lrt">
+      <div class="lnm">Study<b>Lumina</b></div>
+      <div class="lurl">app.studylumina.com</div>
+    </div>
+  </div>
+
+  <!-- ═══ ACT 1 ═══ -->
+  <div class="act" id="act1">
+    <div class="a1-scene">
+      <div class="spotlight-source" id="spSrc"></div>
+      <svg id="spotlight-cone" viewBox="0 0 280 340" fill="none" preserveAspectRatio="none">
+        <defs>
+          <radialGradient id="coneG" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="rgba(212,175,55,0.12)"/>
+            <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+          </radialGradient>
+        </defs>
+        <polygon points="140,0 0,340 280,340" fill="url(#coneG)"/>
+      </svg>
+      <div class="a1-lit">
+        <div class="a1-q" id="a1q">La seule question qui compte</div>
+        <div class="a1-big" id="a1big">
+          Suis-je
+          <em id="mEl">vraiment</em>
+          prêt·e ?
+        </div>
+        <div class="a1-line" id="a1ln"></div>
+        <div class="a1-answer" id="a1ans">
+          StudyLumina te donne<br>
+          une réponse <em>exacte.</em>
+        </div>
+        <div class="a1-ers" id="a1ers">
+          <div class="ers-live-dot"></div>
+          <div class="ers-live-txt">Exam Readiness Score · live</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ACT 2 ═══ -->
+  <div class="act" id="act2">
+    <div class="a2-wrap">
+      <div class="a2-tag" id="a2tg">Avant · Après</div>
+
+      <div class="split">
+        <div class="split-col split-bad" id="sbad">
+          <div class="split-header">
+            <div class="split-header-dot"></div>Sans app
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✗</span>
+            <span>Tu révises tout, sans priorité</span>
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✗</span>
+            <span>Tu devines si tu es prêt·e</span>
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✗</span>
+            <span>Tu relis tes notes en espérant</span>
+          </div>
+        </div>
+        <div class="split-col split-good" id="sgood">
+          <div class="split-header">
+            <div class="split-header-dot"></div>StudyLumina
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✦</span>
+            <span>Plan ciblé sur tes faiblesses</span>
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✦</span>
+            <span>Score ERS objectif par chap.</span>
+          </div>
+          <div class="split-item">
+            <span class="si-icon">✦</span>
+            <span>Ancré dans tes propres docs</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps-title" id="stitl">En <em>3 étapes</em></div>
+      <div class="steps">
+        <div class="step" id="st1">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <div class="step-name">Importe tes documents</div>
+            <div class="step-desc">Notes, slides, manuels — l'IA lit tout.</div>
+          </div>
+        </div>
+        <div class="step" id="st2">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <div class="step-name">Reçois ton score ERS</div>
+            <div class="step-desc">Chapitre par chapitre. Calculé, pas estimé.</div>
+          </div>
+        </div>
+        <div class="step" id="st3">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <div class="step-name">Exécute ton plan quotidien</div>
+            <div class="step-desc">Chaque matin, tu sais exactement quoi faire.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ACT 3 ═══ -->
+  <div class="act" id="act3">
+    <div class="a3-wrap">
+      <div class="a3-tag" id="a3tg">Ton score de préparation</div>
+
+      <div class="big-ring-wrap" id="bringW">
+        <svg viewBox="0 0 180 180" fill="none">
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1A3D6B"/>
+              <stop offset="100%" stop-color="#D4AF37"/>
+            </linearGradient>
+          </defs>
+          <circle id="bigRingBg" cx="90" cy="90" r="80"/>
+          <!-- Tick marks every 30° -->
+          <g id="ticks" stroke="rgba(26,61,107,0.4)" stroke-width="1.5">
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(0 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(30 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(60 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(90 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(120 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(150 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(180 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(210 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(240 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(270 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(300 90 90)"/>
+            <line x1="90" y1="12" x2="90" y2="20" transform="rotate(330 90 90)"/>
+          </g>
+          <circle id="bigRingFill" cx="90" cy="90" r="80" transform="rotate(-90 90 90)"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-label">ERS Global</div>
+          <div class="ring-main">Bien<br><em>préparé·e</em></div>
+          <div class="ring-sub">Chap. 1–8 analysés</div>
+        </div>
+      </div>
+
+      <div class="orbit-tags">
+        <div class="otag otag-a" id="ot1"><em>📊</em> Score ERS</div>
+        <div class="otag otag-b" id="ot2"><em>🎯</em> Plan ciblé</div>
+        <div class="otag otag-c" id="ot3"><em>📄</em> Tes docs</div>
+        <div class="otag otag-d" id="ot4"><em>🧠</em> Simulations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ACT 4 ═══ -->
+  <div class="act" id="act4">
+    <div class="a4-wrap">
+      <div class="a4-pre" id="a4pre">Commence en 3 minutes</div>
+      <div class="a4-title" id="a4ti">
+        Arrête<br>de deviner.
+        <em>Sache.</em>
+      </div>
+      <div class="a4-rule" id="a4ru"></div>
+      <div class="a4-sub" id="a4su">
+        Importe un document.<br>
+        <strong>Ton ERS apparaît immédiatement.</strong>
+      </div>
+      <div class="a4-btn" id="a4btn">
+        <div class="btn-l">
+          <div class="btn-cta">Essai gratuit · 14 jours</div>
+          <div class="btn-url">app.studylumina.com</div>
+        </div>
+        <div class="btn-r">
+          <svg viewBox="0 0 18 18" fill="none">
+            <path d="M4 9H14M14 9L10 5M14 9L10 13" stroke="#D4AF37" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="a4-urg" id="a4urg">🔒 Accès bêta · <span>Rejoins les premiers étudiants</span></div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ═══════════════════════════════════════════
+//  CANVAS BG — grain + slow gradient fields
+// ═══════════════════════════════════════════
+const bgC = document.getElementById('bg-canvas');
+const bgX = bgC.getContext('2d');
+bgC.width = 390; bgC.height = 693;
+
+// Pre-generate grain texture
+const grainC = document.createElement('canvas');
+grainC.width = 390; grainC.height = 693;
+const gX = grainC.getContext('2d');
+const imgData = gX.createImageData(390, 693);
+for (let i = 0; i < imgData.data.length; i += 4) {
+  const v = Math.random() * 18;
+  imgData.data[i] = v; imgData.data[i+1] = v;
+  imgData.data[i+2] = v; imgData.data[i+3] = 255;
+}
+gX.putImageData(imgData, 0, 0);
+
+// Slow-moving color fields
+const fields = [
+  { x: 80,  y: 120, r: 180, cr: 26,  cg: 61,  cb: 107, a: 0.18, vx: 0.12, vy: 0.08 },
+  { x: 310, y: 580, r: 160, cr: 212, cg: 175, cb: 55,  a: 0.08, vx:-0.09, vy:-0.11 },
+  { x: 200, y: 350, r: 140, cr: 26,  cg: 61,  cb: 107, a: 0.12, vx: 0.07, vy:-0.09 },
+  { x: 50,  y: 500, r: 120, cr: 212, cg: 175, cb: 55,  a: 0.05, vx: 0.13, vy: 0.06 },
+];
+function drawBG(t) {
+  bgX.clearRect(0, 0, 390, 693);
+  bgX.fillStyle = '#060C18';
+  bgX.fillRect(0, 0, 390, 693);
+  // Color fields
+  fields.forEach(f => {
+    f.x += f.vx; f.y += f.vy;
+    if (f.x < -f.r) f.x = 390 + f.r;
+    if (f.x > 390 + f.r) f.x = -f.r;
+    if (f.y < -f.r) f.y = 693 + f.r;
+    if (f.y > 693 + f.r) f.y = -f.r;
+    const g = bgX.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+    g.addColorStop(0, `rgba(${f.cr},${f.cg},${f.cb},${f.a})`);
+    g.addColorStop(1, `rgba(${f.cr},${f.cg},${f.cb},0)`);
+    bgX.fillStyle = g;
+    bgX.fillRect(0, 0, 390, 693);
+  });
+  // Grain overlay
+  bgX.globalAlpha = 0.06;
+  bgX.drawImage(grainC, 0, 0);
+  bgX.globalAlpha = 1;
+  requestAnimationFrame(drawBG);
+}
+requestAnimationFrame(drawBG);
+
+// ═══════════════════════════════════════════
+//  CANVAS FG — particles + connections
+// ═══════════════════════════════════════════
+const fgC = document.getElementById('fg-canvas');
+const fgX = fgC.getContext('2d');
+fgC.width = 390; fgC.height = 693;
+
+const pts = [];
+for (let i = 0; i < 22; i++) {
+  pts.push({
+    x: Math.random()*390, y: Math.random()*693,
+    vx:(Math.random()-.5)*.28, vy:(Math.random()-.5)*.28,
+    r: Math.random()*1.0+0.3
+  });
+}
+function drawFG() {
+  fgX.clearRect(0,0,390,693);
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0)p.x=390; if(p.x>390)p.x=0;
+    if(p.y<0)p.y=693; if(p.y>693)p.y=0;
+    fgX.beginPath();
+    fgX.arc(p.x,p.y,p.r,0,Math.PI*2);
+    fgX.fillStyle='rgba(26,61,107,0.55)';
+    fgX.fill();
+    for (let j = i+1; j < pts.length; j++) {
+      const q = pts[j];
+      const d = Math.hypot(p.x-q.x, p.y-q.y);
+      if (d < 75) {
+        fgX.beginPath();
+        fgX.moveTo(p.x,p.y); fgX.lineTo(q.x,q.y);
+        fgX.strokeStyle=`rgba(26,61,107,${.14*(1-d/75)})`;
+        fgX.lineWidth=0.5; fgX.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawFG);
+}
+drawFG();
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+const SP = 'cubic-bezier(0.16,1,0.3,1)';
+const g  = id => document.getElementById(id);
+
+function rin(el, delay=0, dur=550) {
+  setTimeout(()=>{
+    el.style.transition=`opacity ${dur}ms ease, transform ${dur}ms ${SP}`;
+    el.style.opacity='1';
+    el.style.transform='translateY(0) translateX(0) scale(1) scaleX(1)';
+  }, delay);
+}
+function showA(id){ g(id).style.opacity='1'; }
+function hideA(id){
+  const el=g(id);
+  el.style.transition='opacity 0.32s ease-in';
+  el.style.opacity='0';
+}
+function showLogo(){ g('logo').style.opacity='1'; }
+function hideLogo(){ g('logo').style.opacity='0'; }
+
+// Word morph — durées asymétriques : "vraiment" court, "sincèrement" long
+const mWords   = ['vraiment','sincèrement'];
+const mDelays  = [1800, 3000]; // ms avant de passer au mot suivant
+let mI=0, mTimer=null;
+function cycleMorph(){
+  const el = g('mEl');
+  el.style.transition='transform 0.28s ease-in, opacity 0.28s ease-in';
+  el.style.transform='translateY(-18px)'; el.style.opacity='0';
+  setTimeout(()=>{
+    mI=(mI+1)%mWords.length; el.textContent=mWords[mI];
+    el.style.transition='none'; el.style.transform='translateY(18px)'; el.style.opacity='0';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.transition=`transform 0.42s ${SP}, opacity 0.42s ease`;
+      el.style.transform='translateY(0)'; el.style.opacity='1';
+    }));
+    // planifie le prochain morph selon la durée du mot courant
+    mTimer = setTimeout(cycleMorph, mDelays[mI]);
+  }, 300);
+}
+
+// Big ring animate
+function animRing(pct, dur=2000){
+  const circ = 502;
+  g('bigRingFill').style.transition=`stroke-dashoffset ${dur}ms cubic-bezier(0.4,0,0.2,1)`;
+  g('bigRingFill').style.strokeDashoffset = String(circ - circ*(pct/100));
+}
+
+// ═══════════════════════════════════════════
+//  TIMELINE
+//  ACT 1:  0    – 4.5s
+//  ACT 2:  5    – 9.5s
+//  ACT 3: 10    – 14s
+//  ACT 4: 14.5  – 16s → loop
+// ═══════════════════════════════════════════
+const LOOP = 19000;
+let loopStart = null;
+
+function resetAll(){
+  ['act1','act2','act3','act4'].forEach(id=>{
+    const el=g(id); el.style.transition='none'; el.style.opacity='0';
+  });
+  // act1
+  g('spSrc').style.opacity='0';
+  g('spotlight-cone').style.opacity='0';
+  ['a1q','a1ans','a1ers'].forEach(id=>{
+    const el=g(id); el.style.opacity='0'; el.style.transform='translateY(8px)';
+  });
+  const ab=g('a1big');
+  ab.style.opacity='0'; ab.style.transform='translateY(30px) scale(0.96)';
+  g('a1ln').style.height='0px';
+  g('mEl').textContent=mWords[0];
+  g('mEl').style.transform='translateY(0)'; g('mEl').style.opacity='1';
+  mI=0; clearTimeout(mTimer);
+
+  // act2
+  g('a2tg').style.opacity='0';
+  ['sbad','sgood'].forEach(id=>{
+    const el=g(id); el.style.opacity='0';
+    el.style.transform=id==='sbad'?'translateX(-20px)':'translateX(20px)';
+  });
+  g('stitl').style.opacity='0'; g('stitl').style.transform='translateY(10px)';
+  ['st1','st2','st3'].forEach(id=>{
+    const el=g(id); el.style.opacity='0'; el.style.transform='translateX(-16px)';
+  });
+
+  // act3
+  g('a3tg').style.opacity='0';
+  const bw=g('bringW');
+  bw.style.opacity='0'; bw.style.transform='scale(0.7)';
+  g('bigRingFill').style.transition='none';
+  g('bigRingFill').style.strokeDashoffset='502';
+  ['ot1','ot2','ot3','ot4'].forEach(id=>{
+    const el=g(id);
+    el.style.opacity='0'; el.style.transform='translateY(14px) scale(0.9)';
+    el.style.animationPlayState='paused';
+  });
+
+  // act4
+  g('a4pre').style.opacity='0';
+  const a4ti=g('a4ti'); a4ti.style.opacity='0'; a4ti.style.transform='translateY(28px)';
+  const a4ru=g('a4ru'); a4ru.style.opacity='0'; a4ru.style.transform='scaleX(0)';
+  g('a4su').style.opacity='0';
+  const btn=g('a4btn'); btn.style.opacity='0'; btn.style.transform='translateY(14px)';
+  btn.style.animationPlayState='paused';
+  const urg=g('a4urg'); urg.style.opacity='0'; urg.style.animationPlayState='paused';
+  hideLogo();
+}
+
+// ── ACT 1 ──────────────────────────────
+function runAct1(){
+  showA('act1'); showLogo();
+  // spotlight source flicker on
+  setTimeout(()=>{ g('spSrc').style.opacity='1'; },100);
+  // cone fades in
+  setTimeout(()=>{ g('spotlight-cone').style.opacity='1'; },200);
+  // question
+  setTimeout(()=>{
+    const el=g('a1q');
+    el.style.transition=`opacity 0.5s ease, transform 0.5s ${SP}`;
+    el.style.opacity='1'; el.style.transform='translateY(0)';
+  }, 400);
+  // big title
+  setTimeout(()=>{
+    const el=g('a1big');
+    el.style.transition=`opacity 0.8s ${SP}, transform 0.8s ${SP}`;
+    el.style.opacity='1'; el.style.transform='translateY(0) scale(1)';
+  }, 700);
+  // line grows
+  setTimeout(()=>{ g('a1ln').style.height='32px'; }, 1100);
+  // answer
+  setTimeout(()=>{
+    const el=g('a1ans');
+    el.style.transition=`opacity 0.55s ease, transform 0.55s ${SP}`;
+    el.style.opacity='1'; el.style.transform='translateY(0)';
+  }, 1350);
+  // ERS badge
+  setTimeout(()=>{
+    const el=g('a1ers');
+    el.style.transition=`opacity 0.55s ease, transform 0.55s ${SP}`;
+    el.style.opacity='1'; el.style.transform='translateY(0) scale(1)';
+  }, 1800);
+  // word morph at 2.8s — "vraiment" tient 1.8s, "sincèrement" tient 3s
+  setTimeout(()=>{ mTimer = setTimeout(cycleMorph, mDelays[mI]); }, 2800);
+}
+
+// ── ACT 2 ──────────────────────────────
+function runAct2(){
+  clearTimeout(mTimer);
+  hideA('act1'); hideLogo();
+  setTimeout(()=>{
+    showA('act2'); showLogo();
+    // tag
+    const tg=g('a2tg');
+    tg.style.transition='opacity 0.4s ease'; tg.style.opacity='1';
+    // split cols
+    setTimeout(()=>{
+      ['sbad','sgood'].forEach(id=>{
+        const el=g(id);
+        el.style.transition=`opacity 0.55s ${SP}, transform 0.55s ${SP}`;
+        el.style.opacity='1'; el.style.transform='translateX(0)';
+      });
+    }, 150);
+    // steps title
+    setTimeout(()=>{
+      const el=g('stitl');
+      el.style.transition=`opacity 0.5s ease, transform 0.5s ${SP}`;
+      el.style.opacity='1'; el.style.transform='translateY(0)';
+    }, 900);
+    // steps stagger
+    ['st1','st2','st3'].forEach((id,i)=>{
+      const el=g(id);
+      el.style.transition=`opacity 0.5s ${SP}, transform 0.5s ${SP}`;
+      setTimeout(()=>{
+        el.style.opacity='1'; el.style.transform='translateX(0)';
+      }, 1100 + i*220);
+    });
+  }, 360);
+}
+
+// ── ACT 3 ──────────────────────────────
+function runAct3(){
+  hideA('act2'); hideLogo();
+  setTimeout(()=>{
+    showA('act3'); showLogo();
+    // tag
+    const tg=g('a3tg');
+    tg.style.transition='opacity 0.4s ease'; tg.style.opacity='1';
+    // big ring
+    setTimeout(()=>{
+      const bw=g('bringW');
+      bw.style.transition=`opacity 0.8s ${SP}, transform 0.8s ${SP}`;
+      bw.style.opacity='1'; bw.style.transform='scale(1)';
+      setTimeout(()=>animRing(78), 400);
+    }, 200);
+    // orbit tags stagger
+    ['ot1','ot2','ot3','ot4'].forEach((id,i)=>{
+      const el=g(id);
+      el.style.transition=`opacity 0.45s ${SP}, transform 0.45s ${SP}`;
+      setTimeout(()=>{
+        el.style.opacity='1'; el.style.transform='translateY(0) scale(1)';
+        el.style.animationPlayState='running';
+      }, 900 + i*150);
+    });
+  }, 360);
+}
+
+// ── ACT 4 ──────────────────────────────
+function runAct4(){
+  hideA('act3'); hideLogo();
+  setTimeout(()=>{
+    showA('act4'); showLogo();
+    // pre
+    setTimeout(()=>{
+      const el=g('a4pre'); el.style.transition='opacity 0.4s ease'; el.style.opacity='1';
+    }, 80);
+    // title
+    setTimeout(()=>{
+      const el=g('a4ti');
+      el.style.transition=`opacity 0.75s ${SP}, transform 0.75s ${SP}`;
+      el.style.opacity='1'; el.style.transform='translateY(0)';
+    }, 260);
+    // rule
+    setTimeout(()=>{
+      const el=g('a4ru');
+      el.style.transition=`opacity 0.4s ease, transform 0.7s ${SP}`;
+      el.style.opacity='1'; el.style.transform='scaleX(1)';
+    }, 620);
+    // sub
+    setTimeout(()=>{
+      const el=g('a4su'); el.style.transition='opacity 0.5s ease'; el.style.opacity='1';
+    }, 820);
+    // button
+    setTimeout(()=>{
+      const el=g('a4btn');
+      el.style.transition=`opacity 0.6s ${SP}, transform 0.6s ${SP}`;
+      el.style.opacity='1'; el.style.transform='translateY(0)';
+      el.style.animationPlayState='running';
+    }, 1050);
+    // urgency
+    setTimeout(()=>{
+      const el=g('a4urg'); el.style.opacity='1'; el.style.animationPlayState='running';
+    }, 1380);
+  }, 360);
+}
+
+// ── PROGRESS BAR ──────────────────────
+const pbarEl = g('pbar');
+function tickP(){
+  if(loopStart!==null){
+    pbarEl.style.width=Math.min((performance.now()-loopStart)/LOOP*100,100)+'%';
+  }
+  requestAnimationFrame(tickP);
+}
+
+// ── MAIN LOOP ──────────────────────────
+function startLoop(){
+  resetAll();
+  loopStart = performance.now();
+  runAct1();
+  setTimeout(runAct2,  5600);   // act1 = 5.6s — respire après sincèrement
+  setTimeout(runAct3, 10600);   // act2 = 5s
+  setTimeout(runAct4, 15000);   // act3 = 4.4s
+  setTimeout(startLoop, 19000); // act4 = 4s
+}
+
+setTimeout(()=>{ startLoop(); tickP(); }, 200);
+</script>
+</body>
+</html>

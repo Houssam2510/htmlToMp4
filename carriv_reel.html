@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>Carriv — Reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Carriv "concierge" light theme — sand background */
+  --bg:#f5f0e8;       /* sand warm — brand surface */
+  --bg2:#ede5d7;      /* sand2 — slightly deeper */
+  --t:#d4682e;        /* terracotta — unchanged accent */
+  --tm:#e88a52;       /* terracotta mid */
+  --s:#42301f;        /* espresso — main text on light */
+  --s2:#6a5040;       /* espresso mid */
+  --mu:#9a8070;       /* muted warm */
+  --card:#ffffff;     /* card surface */
+  --border:rgba(66,48,31,0.1); /* subtle espresso border */
+}
+html,body{width:390px;height:693px;overflow:hidden;background:var(--bg)}
+
+/* ─── STAGE ─── */
+#stage{
+  position:relative;width:390px;height:693px;
+  overflow:hidden;
+  font-family:'Inter',sans-serif;
+}
+
+/* ─── BACKGROUND SYSTEM ─── */
+
+/* Layer 0 — rich multi-stop gradient base */
+#stage{
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(232,138,82,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 88% 85%, rgba(212,104,46,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(180,120,60,0.07) 0%, transparent 50%),
+    linear-gradient(158deg, #faf7f2 0%, #f5f0e8 40%, #ede8df 100%);
+}
+
+/* Layer 1 — particle canvas */
+#bgc{position:absolute;inset:0;z-index:1}
+
+/* Layer 2 — paper grain (SVG feTurbulence) */
+#grain{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  opacity:1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='390' height='693'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.038'/%3E%3C/svg%3E");
+}
+
+/* Layer 3 — floating orbs */
+.orb{position:absolute;border-radius:50%;pointer-events:none;z-index:3;filter:blur(55px)}
+
+/* top-left warm terracotta halo */
+#o1{
+  width:360px;height:360px;left:-80px;top:-80px;
+  background:radial-gradient(ellipse, rgba(232,138,82,0.18) 0%, rgba(212,104,46,0.06) 50%, transparent 70%);
+  animation:o1d 18s ease-in-out infinite;
+}
+/* bottom-right deep espresso shadow */
+#o2{
+  width:320px;height:320px;right:-90px;bottom:-90px;
+  background:radial-gradient(ellipse, rgba(100,65,35,0.10) 0%, rgba(66,48,31,0.04) 50%, transparent 70%);
+  animation:o2d 22s ease-in-out infinite;
+}
+/* centre accent — breathes in/out */
+#o3{
+  width:220px;height:180px;
+  left:50%;top:50%;margin-left:-110px;margin-top:-90px;
+  background:radial-gradient(ellipse, rgba(212,104,46,0.06) 0%, transparent 70%);
+  animation:o3d 10s ease-in-out infinite;
+}
+@keyframes o1d{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(35px,45px) scale(1.08)}
+  66%{transform:translate(-15px,20px) scale(0.95)}
+}
+@keyframes o2d{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(-30px,-35px) scale(1.1)}
+}
+@keyframes o3d{
+  0%,100%{transform:scale(1);opacity:0.7}
+  50%{transform:scale(1.5);opacity:1}
+}
+
+/* Layer 4 — subtle diagonal vignette */
+#vignette{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:
+    radial-gradient(ellipse 100% 100% at 50% 50%,
+      transparent 40%,
+      rgba(66,48,31,0.04) 100%);
+}
+
+/* ─── LOGO — top center, always visible ─── */
+#logo{
+  position:absolute;top:46px;left:0;right:0;
+  z-index:30;display:flex;align-items:center;justify-content:center;gap:10px;
+  opacity:0;transition:opacity 0.6s ease;pointer-events:none;
+}
+#logo.show{opacity:1}
+#logo svg{width:28px;height:28px}
+#logo .ln{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:-0.2px;color:var(--s);
+}
+/* logo SVG strokes need to be espresso on light bg */
+#logo svg path[stroke]{stroke:var(--s)}
+
+/* ─── PROGRESS ─── */
+#prog{position:absolute;bottom:0;left:0;height:2px;background:var(--t);z-index:40;width:0}
+
+/* ─── FADE COVER ─── */
+#fc{
+  position:absolute;inset:0;z-index:50;
+  background:#f5f0e8;opacity:0;pointer-events:none;
+  transition:opacity 0.3s ease;
+}
+#fc.on{opacity:1}
+
+/* ─── ACT SHELL ─── */
+/* All acts: full bleed, flex column, everything centered */
+.act{
+  position:absolute;inset:0;z-index:10;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  /* safe zone: leave 100px for logo top, 32px bottom */
+  padding:100px 32px 32px;
+  gap:0;
+  text-align:center;
+}
+.act.active{display:flex}
+
+/* ─── REVEAL ATOM ─── */
+/* Default: slides up from below */
+.r{
+  opacity:0;transform:translateY(22px);
+  transition:
+    opacity  0.55s cubic-bezier(0.16,1,0.3,1),
+    transform 0.55s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform,opacity;
+  width:100%;
+  display:flex;flex-direction:column;align-items:center;
+}
+.r.in{opacity:1;transform:translateY(0)}
+
+/* ─── SHARED TEXT ATOMS ─── */
+.eyebrow{
+  font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
+  color:var(--t);margin-bottom:0;
+}
+.big-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:900;letter-spacing:-2px;line-height:0.97;
+  color:var(--s);text-align:center;
+}
+.big-title .accent{color:var(--t)}
+.sub-copy{
+  font-size:15px;line-height:1.6;color:var(--s2);
+  text-align:center;max-width:310px;
+}
+
+/* ─── PILL TAG ─── */
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid rgba(212,104,46,0.35);border-radius:100px;
+  padding:7px 16px;background:rgba(212,104,46,0.09);
+}
+.pill-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--t);flex-shrink:0;
+  animation:pdot 1.4s ease-in-out infinite;
+}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.6)}}
+.pill-txt{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--t)}
+
+/* ─── DIVIDER ─── */
+.divider{
+  width:0;height:2px;background:var(--t);border-radius:2px;
+  transition:width 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.divider.in{width:44px}
+
+/* ════════════════════════════════
+   ACT 1 — HOOK
+   Rhythm: pill → title → sub → divider
+   3 beats, one at a time
+════════════════════════════════ */
+
+/* Word morph: one word cycling */
+.morph-box{
+  position:relative;overflow:hidden;
+  height:84px;width:100%;
+}
+.mw{
+  position:absolute;inset:0;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:900;font-size:80px;letter-spacing:-3px;line-height:1;
+  color:var(--t);text-align:center;
+  transition:transform 0.42s cubic-bezier(0.16,1,0.3,1),opacity 0.32s ease;
+}
+.mw.enter{transform:translateY(60px);opacity:0}
+.mw.visible{transform:translateY(0);opacity:1}
+.mw.exit{transform:translateY(-60px);opacity:0}
+
+/* The static part of the headline */
+.hook-line{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:900;font-size:80px;letter-spacing:-3px;line-height:1;
+  color:var(--s);text-align:center;width:100%;
+}
+.hook-small{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;font-size:26px;letter-spacing:-0.5px;line-height:1.2;
+  color:rgba(66,48,31,0.35);text-align:center;
+  margin-top:8px;
+}
+
+/* ════════════════════════════════
+   ACT 2 — MATCH
+   Rhythm: headline → two cards slide in
+           → SVG line draws between them
+           → 3 keywords light up one by one
+           → checkmark pulses at centre
+════════════════════════════════ */
+
+/* The two side cards */
+.match-arena{
+  width:100%;display:flex;align-items:center;
+  justify-content:center;gap:0;position:relative;
+  height:148px;
+}
+.match-card{
+  width:130px;flex-shrink:0;
+  border-radius:14px;padding:14px 12px;
+  background:var(--card);border:1px solid var(--border);
+  box-shadow:0 4px 20px rgba(66,48,31,0.07);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  transition:transform 0.55s cubic-bezier(0.16,1,0.3,1),
+             opacity 0.45s ease;
+}
+.match-card.left-hide{transform:translateX(-40px);opacity:0}
+.match-card.right-hide{transform:translateX(40px);opacity:0}
+.match-card.show{transform:translateX(0);opacity:1}
+
+.mc-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:rgba(212,104,46,0.1);border:1px solid rgba(212,104,46,0.18);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.mc-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;font-size:12px;letter-spacing:-0.2px;
+  color:var(--s);text-align:center;line-height:1.2;
+}
+.mc-subs{width:100%;display:flex;flex-direction:column;gap:4px}
+.mc-line{height:5px;border-radius:3px;background:rgba(66,48,31,0.08)}
+.mc-line.w80{width:80%}
+.mc-line.w60{width:60%}
+.mc-line.w90{width:90%}
+
+/* SVG connector canvas — sits between the two cards */
+.match-svg-wrap{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+}
+#matchSvg{overflow:visible}
+#connLine{
+  stroke:var(--t);stroke-width:1.5;fill:none;stroke-linecap:round;
+  stroke-dasharray:120;stroke-dashoffset:120;
+  transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+#connLine.draw{stroke-dashoffset:0}
+
+/* Centre checkmark */
+.match-check{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(0);
+  width:38px;height:38px;border-radius:50%;
+  background:var(--t);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#fff;
+  transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
+  z-index:3;box-shadow:0 4px 20px rgba(212,104,46,0.4);
+}
+.match-check.pop{
+  transform:translate(-50%,-50%) scale(1);
+  animation:checkPulse 1.6s ease-in-out infinite 0.45s;
+}
+@keyframes checkPulse{
+  0%,100%{box-shadow:0 4px 20px rgba(212,104,46,0.4)}
+  50%{box-shadow:0 4px 32px rgba(212,104,46,0.75);transform:translate(-50%,-50%) scale(1.08)}
+}
+
+/* Keyword chips */
+.match-keywords{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  width:100%;
+}
+.kw{
+  font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  padding:6px 12px;border-radius:100px;
+  background:rgba(212,104,46,0.0);border:1px solid rgba(212,104,46,0.15);
+  color:var(--mu);
+  transition:background 0.4s ease,border-color 0.4s ease,color 0.4s ease,
+             transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.kw.lit{
+  background:rgba(212,104,46,0.12);border-color:rgba(212,104,46,0.35);
+  color:var(--t);transform:translateY(-2px);
+}
+
+/* ════════════════════════════════
+   ACT 3 — FEATURES
+   Rhythm: headline → 4 rows, one every 500ms
+   Each row is dead simple: icon + label
+════════════════════════════════ */
+.feat-row{
+  width:100%;border-radius:14px;padding:16px 20px;
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(66,48,31,0.06);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+}
+.feat-icon{
+  width:40px;height:40px;flex-shrink:0;border-radius:10px;
+  background:rgba(212,104,46,0.1);border:1px solid rgba(212,104,46,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+.feat-label{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;font-size:17px;letter-spacing:-0.3px;color:var(--s);
+  text-align:left;flex:1;
+}
+.feat-tag{
+  font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--t);white-space:nowrap;
+}
+
+/* ════════════════════════════════
+   ACT 4 — CTA
+   Rhythm: ring → headline → button → urgency
+   Slow, majestic, one thing at a time
+════════════════════════════════ */
+.cta-ring{
+  position:relative;width:100px;height:100px;
+  display:flex;align-items:center;justify-content:center;
+}
+.cta-ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring-bg{fill:none;stroke:rgba(212,104,46,0.15);stroke-width:2}
+.ring-fill{
+  fill:none;stroke:var(--t);stroke-width:2;stroke-linecap:round;
+  stroke-dasharray:283;stroke-dashoffset:283;
+  transform-origin:50px 50px;transform:rotate(-90deg);
+  transition:stroke-dashoffset 1.6s cubic-bezier(0.4,0,0.2,1);
+}
+.ring-fill.go{stroke-dashoffset:0}
+.ring-inner-logo{width:58px;height:58px;position:relative;z-index:1;animation:logofloat 3.5s ease-in-out infinite}
+@keyframes logofloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+.cta-headline{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:900;font-size:54px;line-height:0.97;letter-spacing:-2px;
+  color:var(--s);text-align:center;
+}
+.cta-headline .accent{color:var(--t)}
+.cta-btn{
+  width:100%;padding:20px 0;border:none;border-radius:100px;
+  background:var(--t);color:#faf7f2;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;font-size:17px;letter-spacing:0.1px;
+  cursor:pointer;
+  animation:btnpulse 2.4s ease-in-out infinite;
+}
+@keyframes btnpulse{
+  0%,100%{box-shadow:0 8px 28px rgba(212,104,46,0.3)}
+  50%{box-shadow:0 12px 40px rgba(212,104,46,0.5);transform:scale(1.025)}
+}
+.cta-urg{
+  font-size:12px;font-weight:600;color:var(--t);letter-spacing:0.3px;
+  animation:urgblink 1.3s ease-in-out infinite;
+}
+@keyframes urgblink{0%,100%{opacity:1}55%{opacity:0.2}}
+.cta-url{font-size:11px;color:var(--mu);letter-spacing:2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bgc"></canvas>
+  <div id="grain"></div>
+  <div class="orb" id="o1"></div>
+  <div class="orb" id="o2"></div>
+  <div class="orb" id="o3"></div>
+  <div id="vignette"></div>
+  <div id="fc"></div>
+  <div id="prog"></div>
+
+  <!-- LOGO — top center, persists across all acts -->
+  <div id="logo">
+    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="#42301f" stroke-linecap="round">
+        <path d="M723 268 A370 370 0 1 0 693 748" stroke-width="74"/>
+        <path d="M650 330 A270 270 0 1 0 603 706" stroke-width="64" opacity="0.38"/>
+      </g>
+      <g fill="#d4682e">
+        <rect x="650" y="540" width="44" height="145" rx="22" opacity="0.7"/>
+        <rect x="735" y="455" width="44" height="210" rx="22" opacity="0.85"/>
+        <rect x="820" y="360" width="44" height="270" rx="22"/>
+      </g>
+    </svg>
+    <span class="ln">carriv</span>
+  </div>
+
+  <!-- ════ ACT 1 — HOOK ════ -->
+  <!-- Beat 1: pill tag -->
+  <!-- Beat 2: cycling word + static line -->
+  <!-- Beat 3: sub-copy + divider -->
+  <div class="act" id="act1">
+
+    <div class="r" id="a1pill" style="margin-bottom:28px">
+      <div class="pill">
+        <div class="pill-dot"></div>
+        <span class="pill-txt">IA pour ta candidature</span>
+      </div>
+    </div>
+
+    <!-- morph word sits above static word -->
+    <div class="r" id="a1morph" style="margin-bottom:0">
+      <div class="morph-box">
+        <div class="mw enter" id="mw0">Ignoré.</div>
+        <div class="mw enter" id="mw1">Refusé.</div>
+        <div class="mw enter" id="mw2">Oublié.</div>
+      </div>
+      <div class="hook-line">Plus jamais.</div>
+    </div>
+
+    <div class="r" id="a1sub" style="margin-top:20px;gap:16px">
+      <p class="sub-copy">
+        Carriv adapte ton CV à chaque offre,<br>
+        optimise ton score ATS et rédige<br>
+        ta lettre — automatiquement.
+      </p>
+      <div class="divider" id="a1div"></div>
+    </div>
+
+  </div>
+
+  <!-- ════ ACT 2 — MATCH ════ -->
+  <!-- Beat 1: headline -->
+  <!-- Beat 2: two cards slide in from sides -->
+  <!-- Beat 3: connector line draws, checkmark pops -->
+  <!-- Beat 4: 3 keywords light up one by one -->
+  <div class="act" id="act2">
+
+    <div class="r" id="a2head" style="margin-bottom:32px">
+      <h2 class="big-title" style="font-size:42px">Ton CV.<br>L'offre exacte.<br><span class="accent">Le match parfait.</span></h2>
+    </div>
+
+    <div class="r" id="a2arena" style="margin-bottom:24px">
+      <div class="match-arena">
+        <!-- left: job offer -->
+        <div class="match-card left-hide" id="mcLeft">
+          <div class="mc-icon">🏢</div>
+          <div class="mc-title">Offre d'emploi</div>
+          <div class="mc-subs">
+            <div class="mc-line w90"></div>
+            <div class="mc-line w60"></div>
+            <div class="mc-line w80"></div>
+          </div>
+        </div>
+
+        <!-- SVG connector -->
+        <div class="match-svg-wrap">
+          <svg id="matchSvg" width="60" height="2" viewBox="0 0 60 2">
+            <line id="connLine" x1="0" y1="1" x2="60" y2="1"/>
+          </svg>
+          <div class="match-check" id="mcheck">✓</div>
+        </div>
+
+        <!-- right: CV -->
+        <div class="match-card right-hide" id="mcRight">
+          <div class="mc-icon">📄</div>
+          <div class="mc-title">Ton CV Carriv</div>
+          <div class="mc-subs">
+            <div class="mc-line w80"></div>
+            <div class="mc-line w90"></div>
+            <div class="mc-line w60"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="r" id="a2kw">
+      <div class="match-keywords">
+        <div class="kw" id="kw0">React.js</div>
+        <div class="kw" id="kw1">Leadership</div>
+        <div class="kw" id="kw2">Agile</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ ACT 3 — FEATURES ════ -->
+  <!-- Beat 1: eyebrow + title -->
+  <!-- Beat 2–5: 4 rows arrive one by one, 500ms apart -->
+  <div class="act" id="act3">
+
+    <div class="r" id="a3head" style="margin-bottom:24px;gap:8px">
+      <span class="eyebrow">4 outils. 1 candidature parfaite.</span>
+      <h2 class="big-title" style="font-size:38px">Ce que Carriv<br>fait <span class="accent">pour toi.</span></h2>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%">
+      <div class="r" id="fr1">
+        <div class="feat-row">
+          <div class="feat-icon">📄</div>
+          <span class="feat-label">CV sur mesure</span>
+          <span class="feat-tag">Adapté</span>
+        </div>
+      </div>
+      <div class="r" id="fr2">
+        <div class="feat-row">
+          <div class="feat-icon">🎯</div>
+          <span class="feat-label">Score ATS</span>
+          <span class="feat-tag">Analyse</span>
+        </div>
+      </div>
+      <div class="r" id="fr3">
+        <div class="feat-row">
+          <div class="feat-icon">✉️</div>
+          <span class="feat-label">Lettre de motivation</span>
+          <span class="feat-tag">IA</span>
+        </div>
+      </div>
+      <div class="r" id="fr4">
+        <div class="feat-row">
+          <div class="feat-icon">🧠</div>
+          <span class="feat-label">Enrichissement</span>
+          <span class="feat-tag">Expériences</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ ACT 4 — CTA ════ -->
+  <!-- Beat 1: ring logo -->
+  <!-- Beat 2: headline -->
+  <!-- Beat 3: button (big, full width, pulse) -->
+  <!-- Beat 4: urgency + url -->
+  <div class="act" id="act4">
+
+    <div class="r" id="a4ring" style="margin-bottom:28px">
+      <div class="cta-ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="ring-fill" id="ringfill" cx="50" cy="50" r="45"/>
+        </svg>
+        <svg class="ring-inner-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <g fill="none" stroke="#42301f" stroke-linecap="round">
+            <path d="M723 268 A370 370 0 1 0 693 748" stroke-width="74"/>
+            <path d="M650 330 A270 270 0 1 0 603 706" stroke-width="64" opacity="0.38"/>
+          </g>
+          <g fill="#d4682e">
+            <rect x="650" y="540" width="44" height="145" rx="22" opacity="0.7"/>
+            <rect x="735" y="455" width="44" height="210" rx="22" opacity="0.85"/>
+            <rect x="820" y="360" width="44" height="270" rx="22"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="r" id="a4head" style="margin-bottom:26px">
+      <h2 class="cta-headline">Postule<br><span class="accent">plus malin.</span><br>Sois rappelé.</h2>
+    </div>
+
+    <div class="r" id="a4btn" style="margin-bottom:16px;width:100%">
+      <button class="cta-btn">Essayer gratuitement →</button>
+    </div>
+
+    <div class="r" id="a4foot" style="gap:8px">
+      <div class="cta-urg">🔥 Sans CB · Sans engagement · 14 jours offerts</div>
+      <div class="cta-url">carriv.com</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+/* ── RICH PARTICLE SYSTEM ── */
+const bc=$('bgc'),bx=bc.getContext('2d');
+bc.width=390;bc.height=693;
+
+// Family A — large golden dust, slow, with glow halo
+const famA=Array.from({length:10},()=>({
+  x:Math.random()*390, y:Math.random()*693,
+  vx:(Math.random()-.5)*.18, vy:(Math.random()-.5)*.12,
+  r:Math.random()*2.2+1.4,
+  op:Math.random()*.22+.10,
+  phase:Math.random()*Math.PI*2
+}));
+
+// Family B — small fast drifters, terracotta tint
+const famB=Array.from({length:18},()=>({
+  x:Math.random()*390, y:Math.random()*693,
+  vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.30,
+  r:Math.random()*.8+.3,
+  op:Math.random()*.14+.05,
+  phase:Math.random()*Math.PI*2
+}));
+
+// Family C — slow sinusoidal floaters, espresso tint
+const famC=Array.from({length:8},()=>({
+  x:Math.random()*390, y:Math.random()*693,
+  vx:(Math.random()-.5)*.08, vy:-(Math.random()*.08+.03),
+  r:Math.random()*1.4+.8,
+  op:Math.random()*.10+.04,
+  phase:Math.random()*Math.PI*2,
+  freq:Math.random()*.04+.02 // sinusoidal x frequency
+}));
+
+let tick=0;
+(function frame(){
+  bx.clearRect(0,0,390,693);
+  tick++;
+
+  // — Family A: golden glow —
+  famA.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<-10)p.x=400; if(p.x>400)p.x=-10;
+    if(p.y<0)p.y=693; if(p.y>693)p.y=0;
+    // halo glow
+    const g=bx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+    g.addColorStop(0,`rgba(212,104,46,${p.op})`);
+    g.addColorStop(1,`rgba(212,104,46,0)`);
+    bx.fillStyle=g;
+    bx.beginPath();bx.arc(p.x,p.y,p.r*4,0,Math.PI*2);bx.fill();
+    // solid core
+    bx.fillStyle=`rgba(212,104,46,${p.op*2.2})`;
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
+  });
+
+  // — Family B: small fast drifters —
+  famB.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=390; if(p.x>390)p.x=0;
+    if(p.y<0)p.y=693; if(p.y>693)p.y=0;
+    bx.fillStyle=`rgba(185,100,40,${p.op})`;
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
+  });
+
+  // — Family C: sinusoidal espresso floaters —
+  famC.forEach(p=>{
+    p.x+=p.vx + Math.sin(tick*p.freq+p.phase)*0.4;
+    p.y+=p.vy;
+    if(p.x<0)p.x=390; if(p.x>390)p.x=0;
+    if(p.y<0)p.y=693; if(p.y>693)p.y=0;
+    bx.fillStyle=`rgba(100,70,40,${p.op})`;
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fill();
+  });
+
+  requestAnimationFrame(frame);
+})();
+
+/* ── UTILITIES ── */
+const fc=$('fc');
+function hide(id){const e=$(id);if(e)e.classList.remove('in');}
+function reveal(id,ms){
+  setTimeout(()=>{
+    const e=$(id);if(!e)return;
+    e.classList.remove('in');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>e.classList.add('in')));
+  },ms);
+}
+function fadeTo(fn){
+  fc.classList.add('on');
+  setTimeout(()=>{fn();fc.classList.remove('on');},300);
+}
+function showAct(id){
+  ['act1','act2','act3','act4'].forEach(a=>$(a).classList.remove('active'));
+  $(id).classList.add('active');
+}
+const pg=$('prog');
+function startProg(dur){
+  pg.style.transition='none';pg.style.width='0';
+  requestAnimationFrame(()=>{
+    pg.style.transition=`width ${dur}ms linear`;
+    pg.style.width='100%';
+  });
+}
+
+/* ── WORD MORPH ── */
+const WORDS=['Ignoré.','Refusé.','Oublié.'];
+let mIdx=0,mTmr=null;
+function initMorph(){
+  WORDS.forEach((_,i)=>{
+    $(`mw${i}`).className='mw '+(i===0?'visible':'enter');
+  });
+  mIdx=0;
+}
+function nextMorph(){
+  const cur=mIdx;mIdx=(mIdx+1)%WORDS.length;
+  $(`mw${cur}`).className='mw exit';
+  $(`mw${mIdx}`).className='mw enter';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    $(`mw${mIdx}`).className='mw visible';
+  }));
+  setTimeout(()=>{ $(`mw${cur}`).className='mw enter'; },480);
+}
+
+/* ── MATCH ANIMATION ── */
+function resetMatch(){
+  $('mcLeft').className='match-card left-hide';
+  $('mcRight').className='match-card right-hide';
+  $('connLine').classList.remove('draw');
+  $('mcheck').classList.remove('pop');
+  ['kw0','kw1','kw2'].forEach(id=>$(id).classList.remove('lit'));
+}
+function runMatch(){
+  // beat 2a: both cards slide in simultaneously
+  setTimeout(()=>{
+    $('mcLeft').className='match-card show';
+    $('mcRight').className='match-card show';
+  }, 900);
+  // beat 2b: line draws
+  setTimeout(()=>$('connLine').classList.add('draw'), 1500);
+  // beat 2c: checkmark pops
+  setTimeout(()=>$('mcheck').classList.add('pop'), 2000);
+  // beat 3: keywords light one by one
+  setTimeout(()=>$('kw0').classList.add('lit'), 2600);
+  setTimeout(()=>$('kw1').classList.add('lit'), 3000);
+  setTimeout(()=>$('kw2').classList.add('lit'), 3400);
+}
+
+/* ── RING ── */
+function ringGo(){
+  const r=$('ringfill');if(!r)return;
+  r.style.transition='none';r.style.strokeDashoffset='283';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>r.classList.add('go')));
+}
+function ringReset(){
+  const r=$('ringfill');if(!r)return;
+  r.classList.remove('go');r.style.strokeDashoffset='283';
+}
+
+/* ── DIVIDER ── */
+function showDiv(){
+  const d=$('a1div');
+  if(d){d.classList.remove('in');requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('in')));}
+}
+
+/* ════════════════════
+   ACT CONTROLLERS
+   ─────────────────
+   Total loop : 17 000ms
+   Act 1 :  0s → 4.5s   (4 500ms) — hook, morph cycles à 900ms
+   Act 2 :  4.5s → 9s   (4 500ms) — match, beats étirés
+   Act 3 :  9s → 13.5s  (4 500ms) — features, 4 rows à 700ms
+   Act 4 :  13.5s → 17s (3 500ms) — CTA majestueux
+   ─────────────────
+   Règles rythme :
+   • Première entrée : 300ms après l'acte
+   • Écart min entre beats : 700ms
+   • Max 1 élément par beat
+════════════════════ */
+function runAct1(){
+  showAct('act1');
+  ['a1pill','a1morph','a1sub'].forEach(hide);
+  $('a1div').classList.remove('in');
+  if(mTmr){clearInterval(mTmr);mTmr=null;}
+  initMorph();
+
+  reveal('a1pill',  300);                     // beat 1 — tag pill
+  reveal('a1morph', 1000);                    // beat 2 — morph + static line (+700ms)
+  setTimeout(()=>{ mTmr=setInterval(nextMorph,900); }, 1200); // morph cycles every 900ms
+  reveal('a1sub',   2400);                    // beat 3 — sub copy (+1 400ms, let morph do 1.5 cycles)
+  setTimeout(showDiv, 3200);                  // beat 4 — divider stroke (+800ms)
+  // Act holds until 4 500ms, morph keeps cycling — 2 more cycles visible
+}
+
+function runAct2(){
+  showAct('act2');
+  if(mTmr){clearInterval(mTmr);mTmr=null;}
+  ['a2head','a2arena','a2kw'].forEach(hide);
+  resetMatch();
+
+  reveal('a2head',  300);    // beat 1 — headline
+  reveal('a2arena', 1100);   // beat 2 — arena (+800ms)
+
+  // match internal sequence — stretched across 4 500ms
+  setTimeout(()=>{           // beat 3 — cards slide in (+1 400ms from act start)
+    $('mcLeft').className='match-card show';
+    $('mcRight').className='match-card show';
+  }, 1400);
+  setTimeout(()=>$('connLine').classList.add('draw'), 2200); // beat 4 — line (+800ms)
+  setTimeout(()=>$('mcheck').classList.add('pop'),    2900); // beat 5 — checkmark (+700ms)
+
+  reveal('a2kw', 2900);      // keywords zone appears same time as checkmark
+  setTimeout(()=>$('kw0').classList.add('lit'), 3500); // beat 6 — kw1 (+600ms)
+  setTimeout(()=>$('kw1').classList.add('lit'), 4000); // beat 7 — kw2 (+500ms)
+  setTimeout(()=>$('kw2').classList.add('lit'), 4500); // beat 8 — kw3 (+500ms) — right at transition
+}
+
+function runAct3(){
+  showAct('act3');
+  ['a3head','fr1','fr2','fr3','fr4'].forEach(hide);
+
+  reveal('a3head', 300);     // beat 1 — title
+  reveal('fr1',    1100);    // beat 2 — row 1 (+800ms)
+  reveal('fr2',    1900);    // beat 3 — row 2 (+800ms)
+  reveal('fr3',    2700);    // beat 4 — row 3 (+800ms)
+  reveal('fr4',    3500);    // beat 5 — row 4 (+800ms)
+  // Act holds 1s after last row — let the eye scan all 4
+}
+
+function runAct4(){
+  showAct('act4');
+  ringReset();
+  ['a4ring','a4head','a4btn','a4foot'].forEach(hide);
+
+  reveal('a4ring',  300);    // beat 1 — ring logo appears
+  setTimeout(ringGo, 600);   // ring arc fills (1.6s animation)
+  reveal('a4head',  1400);   // beat 2 — headline (+1 100ms, ring nearly full)
+  reveal('a4btn',   2300);   // beat 3 — CTA button (+900ms)
+  reveal('a4foot',  3100);   // beat 4 — urgency + url (+800ms)
+  // Holds ~400ms until loop restart — button pulse has time to do 1 full cycle
+}
+
+/* ── MAIN LOOP ── */
+// ┌─────────────────────────────────────────────┐
+// │  0ms        → 4 500ms   Act 1  (4.5s)       │
+// │  4 500ms    → 9 000ms   Act 2  (4.5s)       │
+// │  9 000ms    → 13 500ms  Act 3  (4.5s)       │
+// │  13 500ms   → 17 000ms  Act 4  (3.5s)       │
+// │  17 000ms               Loop restart         │
+// └─────────────────────────────────────────────┘
+const LOOP=17000;
+let timers=[];
+function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+
+function runLoop(){
+  clearTimers();
+  startProg(LOOP);
+  $('logo').classList.add('show');
+  runAct1();
+  timers.push(setTimeout(()=>fadeTo(runAct2),  5500));
+  timers.push(setTimeout(()=>fadeTo(runAct3),  9000));
+  timers.push(setTimeout(()=>fadeTo(runAct4), 13500));
+}
+
+runLoop();
+setInterval(runLoop, LOOP);
+</script>
+</body>
+</html>
