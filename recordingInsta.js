@@ -26,7 +26,7 @@ const path = require('path');
 // ── CONFIG ──────────────────────────────────────
 const HTML_FILE   = 'carriv_reel.html';
 const OUTPUT_FILE = './carriv_reel.mp4';
-const DURATION_MS = 17000;  // 16s boucle + 1s marge
+const DURATION_MS = 21500;  // 16s boucle + 1s marge
 const FPS         = 60;
 
 // Dimensions finales — 9:16 natif Instagram & TikTok

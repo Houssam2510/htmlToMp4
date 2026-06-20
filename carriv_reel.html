@@ -584,7 +584,7 @@ html,body{width:390px;height:693px;overflow:hidden;background:var(--bg)}
     </div>
 
     <div class="r" id="a4foot" style="gap:8px">
-      <div class="cta-urg">🔥 Sans CB · Sans engagement · 14 jours offerts</div>
+      <div class="cta-urg">🔥 Sans CB · Sans engagement · 3 générations offertes</div>
       <div class="cta-url">carriv.com</div>
     </div>
 
@@ -841,7 +841,7 @@ function runAct4(){
 // │  13 500ms   → 17 000ms  Act 4  (3.5s)       │
 // │  17 000ms               Loop restart         │
 // └─────────────────────────────────────────────┘
-const LOOP=17000;
+const LOOP=21000;
 let timers=[];
 function clearTimers(){timers.forEach(clearTimeout);timers=[];}
 
@@ -850,9 +850,9 @@ function runLoop(){
   startProg(LOOP);
   $('logo').classList.add('show');
   runAct1();
-  timers.push(setTimeout(()=>fadeTo(runAct2),  5500));
-  timers.push(setTimeout(()=>fadeTo(runAct3),  9000));
-  timers.push(setTimeout(()=>fadeTo(runAct4), 13500));
+  timers.push(setTimeout(()=>fadeTo(runAct2),  4000));
+  timers.push(setTimeout(()=>fadeTo(runAct3),  10000));
+  timers.push(setTimeout(()=>fadeTo(runAct4), 15000));
 }
 
 runLoop();
